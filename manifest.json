@@ -22,23 +22,9 @@
   "settings": [
     {
       "key": "api_provider",
-      "type": "option",
+      "type": "string",
       "title": "API Provider",
-      "description": "Select the backend service to resolve the video URL.",
-      "options": [
-        {
-          "label": "TikWM - Recommended",
-          "value": "tikwm"
-        },
-        {
-          "label": "Cobalt - Fast/OpenSource",
-          "value": "cobalt"
-        },
-        {
-          "label": "Lovit - Backup",
-          "value": "lovit"
-        }
-      ],
+      "description": "Enter the backend service to resolve the video URL: tikwm, cobalt, or lovit",
       "default": "tikwm"
     }
   ]

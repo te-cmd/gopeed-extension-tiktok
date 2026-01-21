@@ -25,11 +25,12 @@ A Gopeed extension that enables downloading TikTok videos without watermarks usi
 
 ## Configuration
 
-The extension provides a setting to choose between three API providers:
+The extension provides a setting to enter the API provider:
 
-- **TikWM - Recommended**: Best quality and metadata
-- **Cobalt - Fast/OpenSource**: Quick downloads with open-source backing
-- **Lovit - Backup**: Alternative provider for redundancy
+- Enter one of these values: `tikwm`, `cobalt`, or `lovit`
+- **TikWM**: Recommended - Best quality and metadata
+- **Cobalt**: Fast and open-source option
+- **Lovit**: Backup provider for redundancy
 
 ## Technical Details
 
