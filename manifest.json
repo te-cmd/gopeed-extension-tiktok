@@ -1,10 +1,24 @@
 {
   "name": "TikTok Downloader",
+  "title": "TikTok Video Downloader",
   "version": "1.0.0",
   "description": "Download TikTok videos without watermark. Supports multiple API providers.",
   "author": "Locon213",
-  "repository": "https://github.com/Locon213/gopeed-extension-tiktok",
+  "homepage": "https://github.com/Locon213/gopeed-extension-tiktok",
+  "repository": {
+    "url": "https://github.com/Locon213/gopeed-extension-tiktok"
+  },
+  "icon": "icon.png",
   "entry": "index.js",
+  "scripts": [
+    {
+      "event": "onResolve",
+      "match": {
+        "urls": ["*://*.tiktok.com/*"]
+      },
+      "entry": "index.js"
+    }
+  ],
   "settings": [
     {
       "key": "api_provider",

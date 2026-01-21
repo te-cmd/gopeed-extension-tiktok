@@ -17,9 +17,11 @@ A Gopeed extension that enables downloading TikTok videos without watermarks usi
 
 ## Installation
 
-1. Install the extension in Gopeed
-2. Configure your preferred API provider in the settings
-3. Paste TikTok URLs directly into Gopeed to download
+1. Copy the repository URL: https://github.com/Locon213/gopeed-extension-tiktok
+2. Open Gopeed and navigate to the Extensions section
+3. Paste the repository URL in the appropriate field to install the extension
+4. Once installed, configure your preferred API provider in the settings
+5. Paste TikTok URLs directly into Gopeed to download
 
 ## Configuration
 
@@ -39,7 +41,3 @@ The extension provides a setting to choose between three API providers:
 ## Author
 
 Locon213
-
-## Repository
-
-https://github.com/Locon213/gopeed-extension-tiktok
