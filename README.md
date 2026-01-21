@@ -1,43 +1,41 @@
 # TikTok Downloader Extension for Gopeed
 
-A Gopeed extension that enables downloading TikTok videos without watermarks using multiple API providers.
+A powerful Gopeed extension that enables downloading TikTok videos without watermarks (No-WM) in HD quality.
 
 ## Features
 
-- Download TikTok videos without watermarks
-- Multiple API providers for reliability
-- Automatic filename generation with author and title
-- Support for HD quality when available
+- **No Watermark**: Gets the clean video file.
+- **HD Support**: Automatically selects the highest quality available.
+- **Reliable Providers**: Uses TikWM as the main engine and TikMate as a backup.
+- **Smart Filename**: Uses the unique Video ID to prevent filename errors.
 
 ## Supported API Providers
 
-1. **TikWM** - Recommended provider with good quality and metadata
-2. **Cobalt** - Fast and open-source option
-3. **Lovit** - Backup provider for redundancy
+1. **TikWM** (Default) - Best quality, metadata support, and stability.
+2. **TikMate** (Backup) - Fast alternative if TikWM is unreachable.
 
 ## Installation
 
-1. Copy the repository URL: https://github.com/Locon213/gopeed-extension-tiktok
-2. Open Gopeed and navigate to the Extensions section
-3. Paste the repository URL in the appropriate field to install the extension
-4. Once installed, configure your preferred API provider in the settings
-5. Paste TikTok URLs directly into Gopeed to download
+1. Copy the repository URL: `https://github.com/Locon213/gopeed-extension-tiktok`
+2. Open **Gopeed** -> **Extensions**.
+3. Paste the URL and install.
+4. (Optional) Go to extension settings to choose your API provider.
+
+## Usage
+
+Simply copy and paste any TikTok link into Gopeed task creation.
+
+**Test Link:**
+```
+https://vt.tiktok.com/ZSaMSH682/
+```
 
 ## Configuration
 
-The extension provides a setting to enter the API provider:
-
-- Enter one of these values: `tikwm`, `cobalt`, or `lovit`
-- **TikWM**: Recommended - Best quality and metadata
-- **Cobalt**: Fast and open-source option
-- **Lovit**: Backup provider for redundancy
-
-## Technical Details
-
-- Detects TikTok URLs automatically
-- Resolves direct video links without watermarks
-- Generates appropriate filenames based on video metadata
-- Handles errors gracefully with logging
+In the extension settings, you can switch the provider:
+- **api_provider**:
+  - `tikwm` (Recommended)
+  - `tikmate` (Backup)
 
 ## Author
 

@@ -1,182 +1,101 @@
-// TikTok Downloader Extension for Gopeed
-// Author: Locon213
-
 gopeed.events.onResolve(async (ctx) => {
-  // Check if the URL is a TikTok link
-  if (!ctx.req.url.includes('tiktok.com')) {
-    return;
-  }
+  const url = ctx.req.url;
+
+  if (!url.includes("tiktok.com")) return;
 
   try {
-    // Get the selected API provider from settings
-    const apiProvider = ctx.settings.api_provider || 'tikwm';
-    
-    let resolvedUrl = null;
-    let fileName = null;
+    const settings = gopeed.settings || {};
+    const provider = settings.api_provider || "tikwm";
 
-    switch (apiProvider) {
-      case 'tikwm':
-        ({ resolvedUrl, fileName } = await resolveWithTikWM(ctx.req.url));
-        break;
-      case 'cobalt':
-        ({ resolvedUrl, fileName } = await resolveWithCobalt(ctx.req.url));
-        break;
-      case 'lovit':
-        ({ resolvedUrl, fileName } = await resolveWithLovit(ctx.req.url));
-        break;
-      default:
-        throw new Error(`Unknown API provider: ${apiProvider}`);
+    gopeed.logger.info(`[TikTok] Provider: ${provider} | URL: ${url}`);
+
+    let resolvedUrl = null;
+
+    // Select provider
+    if (provider === "tikmate") {
+        resolvedUrl = await resolveWithTikMate(url);
+    } else {
+        // TikWM by default
+        resolvedUrl = await resolveWithTikWM(url);
     }
 
     if (resolvedUrl) {
-      // Sanitize filename
-      fileName = sanitizeFileName(fileName);
-      
-      // Set the response with the resolved URL and filename
+      // Generate filename from video ID
+      const videoId = getVideoIdFromUrl(url);
+      const finalFileName = `${videoId}.mp4`;
+
+      gopeed.logger.info(`[TikTok] Final File: ${finalFileName}`);
+
       ctx.res = {
-        name: fileName,
-        files: [{
-          req: {
-            url: resolvedUrl
+        name: finalFileName,
+        files: [
+          {
+            name: finalFileName, // Filename for saving
+            req: {
+              url: resolvedUrl,
+              extra: {
+                header: {
+                  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                  "Referer": "https://www.tiktok.com/"
+                }
+              }
+            }
           }
-        }]
+        ]
       };
     } else {
-      throw new Error(`Failed to resolve TikTok video URL using ${apiProvider} provider`);
+      gopeed.logger.warn(`[TikTok] Failed to resolve via ${provider}`);
     }
+
   } catch (error) {
-    gopeed.logger.error(`Error resolving TikTok URL: ${error.message}`);
-    throw error;
+    gopeed.logger.error(`[TikTok] Critical Error: ${error.message}`);
   }
 });
 
-// TikWM API implementation
+// --- API 1: TikWM (Best) ---
 async function resolveWithTikWM(videoUrl) {
   try {
-    const response = await gopeed.fetch({
-      url: `https://www.tikwm.com/api/?url=${encodeURIComponent(videoUrl)}&hd=1`,
-      method: 'GET',
-      headers: {
-        'Referer': 'https://www.tikwm.com/',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      }
-    });
-
-    const data = response.data;
-    
-    if (data.code !== 0) {
-      throw new Error(`TikWM API returned error: ${data.msg || 'Unknown error'}`);
+    const resp = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(videoUrl)}&hd=1`, { method: 'GET' });
+    const data = JSON.parse(await resp.text());
+    if (data.code === 0 && data.data) {
+      return data.data.hdplay || data.data.play;
     }
-
-    // Prefer HD version if available
-    const videoUrl = data.data.hdplay || data.data.play;
-    
-    if (!videoUrl) {
-      throw new Error('No video URL found in TikWM response');
-    }
-
-    // Generate filename from author nickname and title
-    const authorNickname = data.data.author?.nickname || 'TikTok';
-    const title = data.data.title ? data.data.title.substring(0, 50) : 'video'; // Limit title length
-    
-    const fileName = `${sanitizeFileName(authorNickname)} - ${sanitizeFileName(title)}.mp4`;
-    
-    return { resolvedUrl: videoUrl, fileName };
-  } catch (error) {
-    gopeed.logger.error(`Error with TikWM API: ${error.message}`);
-    throw error;
+  } catch (e) {
+    gopeed.logger.error(`TikWM error: ${e.message}`);
   }
+  return null;
 }
 
-// Cobalt API implementation
-async function resolveWithCobalt(videoUrl) {
+// --- API 2: TikMate (Backup) ---
+async function resolveWithTikMate(videoUrl) {
   try {
-    const response = await gopeed.fetch({
-      url: 'https://api.cobalt.tools/api/json',
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      },
-      data: JSON.stringify({
-        url: videoUrl,
-        vCodec: 'h264',
-        isNoTTWatermark: true
-      })
+    // TikMate API works via POST request
+    const resp = await fetch("https://api.tikmate.app/api/lookup", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+        body: `url=${encodeURIComponent(videoUrl)}`
     });
-
-    const data = response.data;
-    
-    if (!data.url) {
-      throw new Error('No video URL found in Cobalt response');
+    const data = JSON.parse(await resp.text());
+    // TikMate returns token and id, need to assemble the link
+    if (data.success && data.token && data.id) {
+        return `https://tikmate.app/download/${data.token}/${data.id}.mp4`;
     }
-
-    // Generate a generic filename since Cobalt might not return metadata
-    const timestamp = new Date().getTime();
-    const fileName = `TikTok_Cobalt_${timestamp}.mp4`;
-    
-    return { resolvedUrl: data.url, fileName };
-  } catch (error) {
-    gopeed.logger.error(`Error with Cobalt API: ${error.message}`);
-    throw error;
+  } catch (e) {
+      gopeed.logger.error(`TikMate error: ${e.message}`);
   }
+  return null;
 }
 
-// Lovit API implementation
-async function resolveWithLovit(videoUrl) {
-  try {
-    const response = await gopeed.fetch({
-      url: 'https://lovetik.com/api/ajax/search',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      },
-      data: `query=${encodeURIComponent(videoUrl)}`
-    });
-
-    const data = response.data;
-    
-    if (data.status !== 'ok') {
-      throw new Error(`Lovit API returned error: ${data.msg || 'Unknown error'}`);
+// --- Helper: Get ID ---
+function getVideoIdFromUrl(url) {
+    try {
+        const cleanUrl = url.split("?")[0];
+        const noSlash = cleanUrl.endsWith("/") ? cleanUrl.slice(0, -1) : cleanUrl;
+        const parts = noSlash.split("/");
+        const id = parts[parts.length - 1];
+        if (!id || id.length > 20 || id.length < 3) return `tiktok_${Date.now()}`;
+        return id;
+    } catch (e) {
+        return `tiktok_${Date.now()}`;
     }
-
-    // Find the no-watermark video link
-    let videoUrl = null;
-    if (data.links && Array.isArray(data.links)) {
-      for (const link of data.links) {
-        if (link.type === 'nowatermark') {
-          videoUrl = link.a;
-          break;
-        }
-      }
-    }
-
-    if (!videoUrl) {
-      throw new Error('No watermark-free video URL found in Lovit response');
-    }
-
-    // Generate filename from author and description
-    const author = data.author ? data.author.replace(/\s+/g, '_') : 'TikTok';
-    const desc = data.desc ? data.desc.substring(0, 50).replace(/\s+/g, '_') : 'video'; // Limit description length
-    
-    const fileName = `${sanitizeFileName(author)} - ${sanitizeFileName(desc)}.mp4`;
-    
-    return { resolvedUrl: videoUrl, fileName };
-  } catch (error) {
-    gopeed.logger.error(`Error with Lovit API: ${error.message}`);
-    throw error;
-  }
-}
-
-// Helper function to sanitize filenames by removing special characters
-function sanitizeFileName(fileName) {
-  if (!fileName) return 'TikTok_Video';
-
-  // Replace special characters that might cause issues in filenames
-  return fileName
-    .replace(/[<>:"/\\|?*]/g, '_')  // Replace invalid filename characters with underscore
-    .replace(/\s+/g, ' ')           // Replace multiple spaces with single space
-    .trim();                        // Remove leading/trailing whitespace
 }

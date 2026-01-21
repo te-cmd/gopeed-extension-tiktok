@@ -1,31 +1,43 @@
 {
-  "name": "TikTok Downloader",
-  "title": "TikTok Video Downloader",
-  "version": "1.0.0",
-  "description": "Download TikTok videos without watermark. Supports multiple API providers.",
+  "name": "tiktok-downloader",
   "author": "Locon213",
+  "title": "TikTok Downloader",
+  "description": "Download TikTok videos without watermark (HD).",
+  "icon": "icon.png",
+  "version": "1.0.0",
   "homepage": "https://github.com/Locon213/gopeed-extension-tiktok",
   "repository": {
     "url": "https://github.com/Locon213/gopeed-extension-tiktok"
   },
-  "icon": "icon.png",
-  "entry": "index.js",
   "scripts": [
     {
       "event": "onResolve",
       "match": {
-        "urls": ["*://*.tiktok.com/*"]
+        "urls": [
+          "*://*.tiktok.com/*",
+          "*://*.tiktokv.com/*"
+        ]
       },
       "entry": "index.js"
     }
   ],
   "settings": [
     {
-      "key": "api_provider",
-      "type": "string",
+      "name": "api_provider",
       "title": "API Provider",
-      "description": "Enter the backend service to resolve the video URL: tikwm, cobalt, or lovit",
-      "default": "tikwm"
+      "description": "Select the service",
+      "type": "string",
+      "value": "tikwm",
+      "options": [
+        {
+          "label": "TikWM (Best Quality)",
+          "value": "tikwm"
+        },
+        {
+          "label": "TikMate (Backup)",
+          "value": "tikmate"
+        }
+      ]
     }
   ]
 }
