@@ -31,21 +31,22 @@ gopeed.events.onResolve(async (ctx) => {
       return;
     }
 
-    // --- Filename ---
+    // --- Safe filename (MUST keep .mp4) ---
     const videoId = getVideoIdFromUrl(url);
-    const finalFileName = `${videoId}.mp4`;
+    const fileName = `${videoId}.mp4`;
 
-    gopeed.logger.info(`[TikTok] Final File: ${finalFileName}`);
+    gopeed.logger.info(`[TikTok] Final File: ${fileName}`);
 
-    // --- FORCE FLAT DOWNLOAD + KEEP EXTENSION ---
+    // --- FORCE FLAT DOWNLOAD (NO FOLDERS) ---
     ctx.res = {
-      name: finalFileName,
+      name: fileName,
 
+      // helps Gopeed treat it as single download task
       type: "single",
 
       files: [
         {
-          name: finalFileName,
+          name: fileName,
           req: {
             url: resolvedUrl,
             extra: {
@@ -71,8 +72,7 @@ gopeed.events.onResolve(async (ctx) => {
 async function resolveWithTikWM(videoUrl) {
   try {
     const resp = await fetch(
-      `https://www.tikwm.com/api/?url=${encodeURIComponent(videoUrl)}&hd=1`,
-      { method: "GET" }
+      `https://www.tikwm.com/api/?url=${encodeURIComponent(videoUrl)}&hd=1`
     );
 
     const data = JSON.parse(await resp.text());
@@ -115,11 +115,14 @@ async function resolveWithTikMate(videoUrl) {
 function getVideoIdFromUrl(url) {
   try {
     const cleanUrl = url.split("?")[0];
-    const noSlash = cleanUrl.endsWith("/") ? cleanUrl.slice(0, -1) : cleanUrl;
+    const noSlash = cleanUrl.endsWith("/")
+      ? cleanUrl.slice(0, -1)
+      : cleanUrl;
+
     const parts = noSlash.split("/");
     const id = parts[parts.length - 1];
 
-    if (!id || id.length > 20 || id.length < 3) {
+    if (!id || id.length > 30 || id.length < 3) {
       return `tiktok_${Date.now()}`;
     }
 
